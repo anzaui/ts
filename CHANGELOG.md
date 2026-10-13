@@ -2,6 +2,18 @@
 
 All notable changes to the TypeScript / JavaScript template and STUI streaming engine are documented here.
 
+## [0.7.0](https://github.com/anzaui/ts/compare/v0.6.0...v0.7.0) (2026-10-13)
+
+
+### ⚠ BREAKING CHANGES
+
+* 0.6.0 hardened engine (signature v2, contract, escaping)
+
+### Features
+
+* 0.6.0 hardened engine (signature v2, contract, escaping) ([14e3a08](https://github.com/anzaui/ts/commit/14e3a08308fb50698db071d68cd0fc73ee429af0))
+* initial commit of anza typescript stui engine ([c7bfe2d](https://github.com/anzaui/ts/commit/c7bfe2dd3793a11b68b3615acc6ff7b45193c1d6))
+
 ## [0.6.0] — 2026-10-13
 
 The hardening release. This repository now versions the engine on its own (from 0.6.0); earlier 0.5.x versions followed the Anza release.
