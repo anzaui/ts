@@ -39,7 +39,8 @@
   "scripts": {
     "build": "tsc",
     "test": "tsc && node --test dist/tests/*.test.js",
-    "prepack": "tsc"
+    "prepack": "tsc",
+    "docs": "typedoc"
   },
   "keywords": [
     "stui",
@@ -52,9 +53,9 @@
   ],
   "author": "Aduki",
   "license": "MIT",
-  "dependencies": {},
   "devDependencies": {
-    "typescript": "^5.7.0",
-    "@types/node": "^20.0.0"
+    "@types/node": "^20.0.0",
+    "typedoc": "0.28.20",
+    "typescript": "^5.7.0"
   }
 }

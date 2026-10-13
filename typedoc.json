@@ -1,0 +1,52 @@
+{
+  "$schema": "https://typedoc.org/schema.json",
+  "name": "@anzaui/engine",
+  "entryPoints": [
+    "src/index.ts",
+    "src/adapters/web.ts",
+    "src/adapters/hono.ts",
+    "src/adapters/express.ts",
+    "src/adapters/fastify.ts"
+  ],
+  "tsconfig": "tsconfig.json",
+  "out": "_site",
+  "readme": "README.md",
+  "includeVersion": true,
+  "favicon": "logo.svg",
+  "customCss": "docs/theme/anza.css",
+  "plugin": ["./docs/theme/plugin.mjs"],
+  "lightHighlightTheme": "one-light",
+  "darkHighlightTheme": "one-dark-pro",
+  "hostedBaseUrl": "https://anzaui.github.io/ts/",
+  "basePath": ".",
+  "githubPages": true,
+  "gitRevision": "main",
+  "excludePrivate": true,
+  "excludeInternal": true,
+  "excludeExternals": true,
+  "categorizeByGroup": false,
+  "categoryOrder": ["Engine", "Rendering", "Signing", "Streaming", "Adapters", "Errors", "*"],
+  "navigation": {
+    "includeCategories": true,
+    "includeGroups": false,
+    "includeFolders": false,
+    "compactFolders": true,
+    "excludeReferences": true
+  },
+  "navigationLinks": {
+    "Anza": "https://anza.aduki.org/docs",
+    "Contract": "https://github.com/anzaui/anza/blob/main/docs/engines/contract.md",
+    "GitHub": "https://github.com/anzaui/ts"
+  },
+  "searchInComments": true,
+  "intentionallyNotExported": ["CacheStore", "FileWatcher"],
+  "treatWarningsAsErrors": true,
+  "validation": {
+    "notExported": true,
+    "invalidLink": true,
+    "invalidPath": true,
+    "rewrittenLink": true,
+    "notDocumented": true,
+    "unusedMergeModuleWith": true
+  }
+}

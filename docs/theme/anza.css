@@ -1,0 +1,947 @@
+/*
+ * Anza theme for TypeDoc.
+ *
+ * Maps TypeDoc's theme variables to the Anza design tokens (anzaui/anza
+ * web/src/tokens: primitives/colors.css, semantic/light.css, semantic/dark.css,
+ * primitives/typography.css) and restyles the toolbar, sidebar and content like
+ * the Anza docs site (web/src/docks/docs, web/src/styles/shared.css).
+ *
+ * TypeDoc's own styles live in `@layer typedoc`, so these unlayered rules win.
+ * Colours are set on the --light-* and --dark-* source variables, so the
+ * built-in OS / Light / Dark theme setting uses Anza colours in every mode.
+ * Fonts are self-hosted in assets/fonts (SIL OFL 1.1, see fonts/OFL.txt).
+ */
+
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url('fonts/inter-latin.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Inter';
+  font-style: italic;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url('fonts/inter-italic-latin.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Plus Jakarta Sans';
+  font-style: normal;
+  font-weight: 200 800;
+  font-display: swap;
+  src: url('fonts/plus-jakarta-sans-latin.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Work Sans';
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url('fonts/work-sans-latin.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 100 800;
+  font-display: swap;
+  src: url('fonts/jetbrains-mono-latin.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: italic;
+  font-weight: 100 800;
+  font-display: swap;
+  src: url('fonts/jetbrains-mono-italic-latin.woff2') format('woff2');
+}
+
+/* ─── Tokens ─────────────────────────────────────────────────────────── */
+
+:root {
+  /* tokens/semantic/light.css (fonts, radii) */
+  --font-heading: 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif;
+  --font-body: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-ui: 'Work Sans', 'Inter', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace;
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 12px;
+  --brand: oklch(62% 0.17 145);
+
+  --dim-toolbar-contents-height: 3.375rem; /* 54px, the Anza docs header */
+
+  /* Light: tokens/semantic/light.css */
+  --light-anza-accent: #07a45f;          /* --accent-color */
+  --light-anza-title: #1f2937;           /* --title-color */
+  --light-anza-nav: #676c72;             /* --nav-color */
+  --light-anza-surface-raised: #edeee4;  /* --surface */
+  --light-anza-inline-code: #edebe9;     /* --prism-background */
+  --light-anza-inline-code-text: #383a42;/* --prism-text */
+
+  --light-color-background: #f6f5ef;                 /* --background */
+  --light-color-background-secondary: #edeee4;       /* --surface */
+  --light-color-background-active: color-mix(in srgb, #07a45f 12%, #f6f5ef);
+  --light-color-background-warning: #ffc8b73f;       /* --error-background */
+  --light-color-warning-text: #ec4b19;               /* --error-color */
+  --light-color-accent: color-mix(in srgb, #494d52 12%, #f6f5ef); /* borders */
+  --light-color-active-menu-item: color-mix(in srgb, #07a45f 9%, transparent);
+  --light-color-text: #494d52;                       /* --text-color */
+  --light-color-contrast-text: #1f2937;              /* --title-color */
+  --light-color-text-aside: #676c72;                 /* --nav-color */
+  --light-color-icon-background: #f6f5ef;
+  --light-color-icon-text: #494d52;
+  --light-color-comment-tag-text: #076b46;           /* --alt-color */
+  --light-color-comment-tag: #c8f5e36c;              /* --que-background */
+  --light-color-link: #1565c0;                       /* --anchor-color */
+  --light-color-focus-outline: #07a45f;
+  --light-code-background: #edeee4;                  /* pre: --surface */
+
+  /* Kinds: the Anza prism palette (light) */
+  --light-color-ts-keyword: #a626a4;
+  --light-color-ts-project: #07a45f;
+  --light-color-ts-module: #07a45f;
+  --light-color-ts-namespace: #076b46;
+  --light-color-ts-enum: #986801;
+  --light-color-ts-enum-member: #986801;
+  --light-color-ts-variable: #0184bc;
+  --light-color-ts-function: #4078f2;
+  --light-color-ts-class: #c18401;
+  --light-color-ts-interface: #07a45f;
+  --light-color-ts-constructor: #c18401;
+  --light-color-ts-property: #986801;
+  --light-color-ts-method: #4078f2;
+  --light-color-ts-reference: #e45649;
+  --light-color-ts-call-signature: #4078f2;
+  --light-color-ts-index-signature: #986801;
+  --light-color-ts-constructor-signature: #c18401;
+  --light-color-ts-parameter: #0184bc;
+  --light-color-ts-type-parameter: #986801;
+  --light-color-ts-accessor: #e45649;
+  --light-color-ts-get-signature: #e45649;
+  --light-color-ts-set-signature: #e45649;
+  --light-color-ts-type-alias: #e45649;
+  --light-color-document: #1f2937;
+  --light-color-alert-note: #1565c0;
+  --light-color-alert-tip: #07a45f;
+  --light-color-alert-important: #a626a4;
+  --light-color-alert-warning: #df791a;              /* --rating-color */
+  --light-color-alert-caution: #ec4b19;              /* --error-color */
+
+  /* Dark: tokens/semantic/dark.css */
+  --dark-anza-accent: #09d379;
+  --dark-anza-title: #f6f7f8;
+  --dark-anza-nav: #dde2e5;
+  --dark-anza-surface-raised: #1e2818;   /* --surfaceElevated */
+  --dark-anza-inline-code: #2d2d2d;      /* --prism-background */
+  --dark-anza-inline-code-text: #cccccc; /* --prism-text */
+
+  --dark-color-background: #1d2018;                  /* --background */
+  --dark-color-background-secondary: #141a0e;        /* --surface */
+  --dark-color-background-active: color-mix(in srgb, #09d379 16%, #1d2018);
+  --dark-color-background-warning: #8321213a;
+  --dark-color-warning-text: #d74a4a;
+  --dark-color-accent: #283018;                      /* --border */
+  --dark-color-active-menu-item: color-mix(in srgb, #09d379 12%, transparent);
+  --dark-color-text: #c4d2e4;                        /* --text-color */
+  --dark-color-contrast-text: #f6f7f8;               /* --title-color */
+  --dark-color-text-aside: #9fb5cf;                  /* --icon-color */
+  --dark-color-icon-background: #1d2018;
+  --dark-color-icon-text: #c4d2e4;
+  --dark-color-comment-tag-text: #52e3a1;            /* --alt-color */
+  --dark-color-comment-tag: #07a45f40;
+  --dark-color-link: #5aa3dd;                        /* --anchor-color */
+  --dark-color-focus-outline: #09d379;
+  --dark-code-background: #1e2818;                   /* pre: --surfaceElevated */
+
+  /* Kinds: the Anza prism palette (dark) */
+  --dark-color-ts-keyword: #cc99cd;
+  --dark-color-ts-project: #09d379;
+  --dark-color-ts-module: #09d379;
+  --dark-color-ts-namespace: #52e3a1;
+  --dark-color-ts-enum: #f08d49;
+  --dark-color-ts-enum-member: #f08d49;
+  --dark-color-ts-variable: #67cdcc;
+  --dark-color-ts-function: #6196cc;
+  --dark-color-ts-class: #f8c555;
+  --dark-color-ts-interface: #7ec699;
+  --dark-color-ts-constructor: #f8c555;
+  --dark-color-ts-property: #f08d49;
+  --dark-color-ts-method: #6196cc;
+  --dark-color-ts-reference: #e2777a;
+  --dark-color-ts-call-signature: #6196cc;
+  --dark-color-ts-index-signature: #f08d49;
+  --dark-color-ts-constructor-signature: #f8c555;
+  --dark-color-ts-parameter: #67cdcc;
+  --dark-color-ts-type-parameter: #f08d49;
+  --dark-color-ts-accessor: #e2777a;
+  --dark-color-ts-get-signature: #e2777a;
+  --dark-color-ts-set-signature: #e2777a;
+  --dark-color-ts-type-alias: #e2777a;
+  --dark-color-document: #f6f7f8;
+  --dark-color-alert-note: #5aa3dd;
+  --dark-color-alert-tip: #09d379;
+  --dark-color-alert-important: #cc99cd;
+  --dark-color-alert-warning: #d38e3e;
+  --dark-color-alert-caution: #d74a4a;
+}
+
+/* Anza-only variables follow the same OS / Light / Dark switch as TypeDoc's. */
+:root {
+  --anza-accent: var(--light-anza-accent);
+  --anza-title: var(--light-anza-title);
+  --anza-nav: var(--light-anza-nav);
+  --anza-surface-raised: var(--light-anza-surface-raised);
+  --anza-inline-code: var(--light-anza-inline-code);
+  --anza-inline-code-text: var(--light-anza-inline-code-text);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --anza-accent: var(--dark-anza-accent);
+    --anza-title: var(--dark-anza-title);
+    --anza-nav: var(--dark-anza-nav);
+    --anza-surface-raised: var(--dark-anza-surface-raised);
+    --anza-inline-code: var(--dark-anza-inline-code);
+    --anza-inline-code-text: var(--dark-anza-inline-code-text);
+  }
+}
+
+:root[data-theme='light'] {
+  --anza-accent: var(--light-anza-accent);
+  --anza-title: var(--light-anza-title);
+  --anza-nav: var(--light-anza-nav);
+  --anza-surface-raised: var(--light-anza-surface-raised);
+  --anza-inline-code: var(--light-anza-inline-code);
+  --anza-inline-code-text: var(--light-anza-inline-code-text);
+}
+
+:root[data-theme='dark'] {
+  --anza-accent: var(--dark-anza-accent);
+  --anza-title: var(--dark-anza-title);
+  --anza-nav: var(--dark-anza-nav);
+  --anza-surface-raised: var(--dark-anza-surface-raised);
+  --anza-inline-code: var(--dark-anza-inline-code);
+  --anza-inline-code-text: var(--dark-anza-inline-code-text);
+}
+
+/* ─── Base ───────────────────────────────────────────────────────────── */
+
+body {
+  font-family: var(--font-body);
+  font-size: 15.5px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background-color: color-mix(in srgb, var(--anza-accent) 25%, transparent);
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-focus-outline);
+  outline-offset: 2px;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading);
+  font-weight: 600;
+  color: var(--color-contrast-text);
+  line-height: 1.2;
+}
+
+h1 {
+  font-size: 1.75rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+h2 {
+  font-size: 1.375rem;
+  letter-spacing: -0.01em;
+}
+
+h3 {
+  font-size: 1.125rem;
+}
+
+a {
+  font-weight: 500;
+  text-underline-offset: 3px;
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-accent) transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  background-color: var(--color-accent);
+  border: 0;
+  border-radius: 3px;
+}
+
+/* ─── Code ───────────────────────────────────────────────────────────── */
+
+code,
+pre,
+.tsd-signature,
+.tsd-signature-type,
+.tsd-kind-parameter {
+  font-family: var(--font-mono);
+}
+
+code {
+  font-size: 0.85em;
+  padding: 0.15em 0.45em;
+  border-radius: var(--radius-md);
+  background-color: var(--anza-inline-code);
+  color: var(--anza-inline-code-text);
+}
+
+pre {
+  white-space: pre;
+  word-wrap: normal;
+  overflow-x: auto;
+  padding: 1.1rem 1.25rem;
+  margin: 0.75rem 0 1rem;
+  border: 1px solid var(--color-accent);
+  border-radius: var(--radius-lg);
+  background-color: var(--code-background);
+  font-size: 0.8125rem;
+  line-height: 1.6;
+}
+
+pre code {
+  padding: 0;
+  font-size: inherit;
+  background: none;
+  color: inherit;
+  border-radius: 0;
+}
+
+pre > button {
+  top: 8px;
+  right: 8px;
+  padding: 2px 8px;
+  font-family: var(--font-ui);
+  font-size: 12px;
+  color: var(--color-text);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-accent);
+  background: var(--color-background);
+}
+
+/* ─── Toolbar (the Anza docs header) ─────────────────────────────────── */
+
+.container {
+  max-width: 1300px;
+  padding: 0 1.25rem;
+}
+
+.tsd-page-toolbar {
+  background: color-mix(in srgb, var(--color-background) 90%, transparent);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border-bottom-color: color-mix(in srgb, var(--color-text) 10%, transparent);
+  font-family: var(--font-ui);
+}
+
+.tsd-toolbar-contents > .title {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 15px;
+  letter-spacing: -0.01em;
+  color: var(--color-contrast-text);
+}
+
+.tsd-toolbar-contents > .title::before {
+  content: '';
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+  background: url('favicon.svg') center / contain no-repeat;
+}
+
+#tsd-toolbar-links {
+  gap: 2px;
+}
+
+#tsd-toolbar-links a,
+.tsd-page-toolbar #tsd-toolbar-links a {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--anza-nav);
+  padding: 5px 10px;
+  border-radius: var(--radius-md);
+  transition: color 120ms ease, background 120ms ease;
+}
+
+#tsd-toolbar-links a:hover {
+  color: var(--color-contrast-text);
+  background: color-mix(in srgb, var(--color-text) 7%, transparent);
+  text-decoration: none;
+}
+
+.tsd-widget {
+  opacity: 1;
+  color: var(--color-text);
+  border-radius: var(--radius-lg);
+}
+
+.tsd-widget:hover {
+  background: color-mix(in srgb, var(--color-text) 7%, transparent);
+}
+
+#tsd-search-trigger {
+  width: auto;
+  height: 32px;
+  padding: 0 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid color-mix(in srgb, var(--color-text) 10%, transparent);
+  background: color-mix(in srgb, var(--color-text) 4%, transparent);
+}
+
+#tsd-search-trigger::after {
+  content: 'Search';
+  font-family: var(--font-ui);
+  font-size: 12.5px;
+  color: color-mix(in srgb, var(--color-text) 60%, transparent);
+}
+
+#tsd-search {
+  border: 1px solid var(--color-accent);
+  border-radius: var(--radius-xl);
+  font-family: var(--font-ui);
+}
+
+#tsd-search-input {
+  font-family: var(--font-ui);
+}
+
+#tsd-search-results li a {
+  border-radius: var(--radius-md);
+}
+
+/* ─── Layout ─────────────────────────────────────────────────────────── */
+
+@media (min-width: 770px) {
+  .container-main {
+    --dim-container-main-margin-y: 1.5rem;
+    grid-template-columns: 240px minmax(0, 1fr);
+    column-gap: 1.5rem;
+  }
+
+  .col-content {
+    padding: 0;
+  }
+}
+
+@media (min-width: 1200px) {
+  .container-main {
+    grid-template-columns: 240px minmax(0, 1fr) 220px;
+  }
+}
+
+/* ─── Left sidebar (site menu) ───────────────────────────────────────── */
+
+.site-menu,
+.page-menu {
+  font-family: var(--font-ui);
+}
+
+@media (min-width: 1200px) {
+  .site-menu {
+    padding-right: 12px;
+    border-right: 1px solid color-mix(in srgb, var(--color-text) 10%, transparent);
+  }
+
+  .page-menu {
+    padding-left: 12px;
+    border-left: 1px solid color-mix(in srgb, var(--color-text) 8%, transparent);
+  }
+}
+
+.tsd-navigation a,
+.tsd-navigation summary > span,
+.tsd-page-navigation a {
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 1.45;
+  color: var(--anza-nav);
+  padding: 5px 8px;
+  border-radius: var(--radius-md);
+  transition: color 120ms ease, background 120ms ease;
+}
+
+.tsd-navigation a:hover,
+.tsd-page-navigation a:hover {
+  color: var(--color-contrast-text);
+  background: color-mix(in srgb, var(--color-text) 6%, transparent);
+  text-decoration: none;
+}
+
+.tsd-navigation a.current,
+.tsd-page-navigation a.current {
+  color: var(--anza-accent);
+  font-weight: 500;
+  background: var(--color-active-menu-item);
+}
+
+.tsd-navigation a > span,
+.tsd-navigation summary > a > span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Chevrons sit on the right, so no negative indents for them. */
+.site-menu .tsd-small-nested-navigation,
+.site-menu .tsd-nested-navigation {
+  margin-left: 0;
+}
+
+.site-menu .tsd-nested-navigation {
+  padding-left: 0.6rem;
+}
+
+.site-menu .tsd-small-nested-navigation > li > details,
+.site-menu .tsd-nested-navigation > li > details {
+  margin-left: 0;
+}
+
+.tsd-navigation a.current .tsd-kind-icon {
+  opacity: 1;
+}
+
+.site-menu .tsd-kind-icon {
+  width: 1rem;
+  height: 1rem;
+  min-width: 1rem;
+  min-height: 1rem;
+  margin-right: 0.5rem;
+  opacity: 0.85;
+}
+
+/* Category headings: the Anza sidebar group header (11px, uppercase). */
+.site-menu .tsd-accordion-summary {
+  padding: 0;
+  border-radius: var(--radius-md);
+}
+
+.site-menu .tsd-accordion-summary:hover {
+  background: color-mix(in srgb, var(--color-text) 6%, transparent);
+}
+
+/* Chevron on the right, like the Anza sidebar; no folder icon. */
+.site-menu .tsd-accordion-summary {
+  flex-direction: row-reverse;
+  justify-content: space-between;
+}
+
+.site-menu .tsd-accordion-summary > span,
+.site-menu .tsd-accordion-summary > a {
+  flex: 1;
+  min-width: 0;
+}
+
+.site-menu .tsd-accordion-summary > svg {
+  flex-shrink: 0;
+  opacity: 0.45;
+  transition: transform 240ms ease, opacity 120ms ease;
+}
+
+.site-menu .tsd-accordion[open] > .tsd-accordion-summary > svg {
+  opacity: 0.8;
+}
+
+.site-menu .tsd-accordion:not([open]) > .tsd-accordion-summary > svg:first-child {
+  transform: rotate(-90deg);
+}
+
+.site-menu summary svg.tsd-kind-icon[aria-label='Folder'] {
+  display: none;
+}
+
+.site-menu wbr {
+  display: none;
+}
+
+#tsd-nav-container > li > details > .tsd-accordion-summary > span,
+.tsd-nested-navigation > li > details > .tsd-accordion-summary > span {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--color-text);
+}
+
+#tsd-nav-container > li > details > .tsd-accordion-summary > a {
+  font-family: var(--font-heading);
+  font-weight: 600;
+  color: var(--color-contrast-text);
+}
+
+#tsd-nav-container > li + li {
+  margin-top: 4px;
+}
+
+.tsd-nested-navigation > li > details {
+  padding-top: 4px;
+  margin-top: 4px;
+  border-top: 1px solid color-mix(in srgb, var(--color-text) 7%, transparent);
+}
+
+#tsd-sidebar-links {
+  display: none;
+}
+
+@media (max-width: 769px) {
+  #tsd-sidebar-links {
+    display: block;
+  }
+
+  .col-sidebar {
+    background-color: var(--color-background);
+    border-left: 1px solid var(--color-accent);
+  }
+}
+
+/* ─── Right sidebar (on this page + settings) ────────────────────────── */
+
+.page-menu .tsd-accordion-summary h3,
+.page-menu .tsd-accordion-summary h4,
+.tsd-page-navigation-section > summary {
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--color-text);
+}
+
+.page-menu .tsd-accordion-summary > svg {
+  opacity: 0.45;
+}
+
+.tsd-page-navigation a {
+  font-size: 12.5px;
+  padding: 3px 8px;
+}
+
+.tsd-filter-visibility h4,
+.settings-label {
+  font-size: 12.5px;
+  color: var(--color-text);
+}
+
+.tsd-checkbox-background {
+  fill: var(--color-background-secondary);
+}
+
+input[type='checkbox']:checked ~ svg .tsd-checkbox-checkmark {
+  color: var(--anza-accent);
+}
+
+#tsd-theme {
+  font-family: var(--font-ui);
+  font-size: 12.5px;
+  color: var(--color-text);
+  background: var(--color-background-secondary);
+  border: 1px solid color-mix(in srgb, var(--color-text) 14%, transparent);
+  border-radius: 999px;
+  padding: 3px 10px;
+}
+
+/* ─── Content ────────────────────────────────────────────────────────── */
+
+.tsd-breadcrumb {
+  font-family: var(--font-ui);
+  font-size: 13px;
+}
+
+.tsd-breadcrumb a {
+  color: var(--anza-nav);
+}
+
+.tsd-breadcrumb li:last-child a {
+  color: var(--color-contrast-text);
+}
+
+.tsd-page-title h1 {
+  margin: 0.4rem 0 0.75rem;
+}
+
+.tsd-typography {
+  line-height: 1.6;
+}
+
+.tsd-typography p,
+.tsd-typography li {
+  font-size: 0.98rem;
+  line-height: 1.6;
+}
+
+.tsd-typography h2 {
+  margin-top: 2rem;
+}
+
+.tsd-typography h3,
+.tsd-typography h4 {
+  margin-top: 1.5rem;
+}
+
+.tsd-typography ul {
+  list-style: disc;
+}
+
+.tsd-typography li::marker {
+  color: var(--anza-accent);
+}
+
+.tsd-typography blockquote {
+  margin: 1.5rem 0;
+  padding: 0.9rem 1.25rem;
+  border-left: 3px solid var(--color-accent);
+  background: var(--color-background-secondary);
+  border-radius: 0 var(--radius-lg) var(--radius-lg) 0;
+}
+
+/* Tables: the Anza table-wrap look. */
+.tsd-typography table {
+  display: block;
+  width: max-content;
+  max-width: 100%;
+  overflow-x: auto;
+  border-collapse: separate;
+  border-spacing: 0;
+  border: 1px solid var(--color-accent);
+  border-radius: var(--radius-lg);
+  font-family: var(--font-ui);
+  font-size: 0.875rem;
+  margin: 1rem 0;
+}
+
+.tsd-typography th,
+.tsd-typography td {
+  padding: 0.6rem 1rem;
+  border: 0;
+  border-bottom: 1px solid var(--color-accent);
+  text-align: left;
+  vertical-align: top;
+}
+
+.tsd-typography tr:last-child td {
+  border-bottom: 0;
+}
+
+.tsd-typography th {
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-contrast-text);
+  background: var(--color-background-secondary);
+}
+
+.tsd-typography tr:nth-child(2n) td {
+  background: color-mix(in srgb, var(--color-background-secondary) 60%, var(--color-background));
+}
+
+.tsd-typography table code {
+  white-space: nowrap;
+}
+
+/* Signatures and member panels. */
+.tsd-signature {
+  font-size: 13px;
+  line-height: 1.6;
+  padding: 0.85rem 1rem;
+  border-radius: var(--radius-lg);
+  background: var(--anza-surface-raised);
+  border-color: var(--color-accent);
+}
+
+.tsd-signatures .tsd-signature {
+  border-width: 1px;
+  margin-bottom: 0.75rem;
+}
+
+.tsd-signature-keyword {
+  color: var(--color-ts-keyword);
+}
+
+.tsd-panel-group.tsd-member-group > .tsd-accordion-summary,
+.tsd-panel-group > .tsd-accordion-summary {
+  border-bottom: 1px solid color-mix(in srgb, var(--color-text) 10%, transparent);
+  margin-bottom: 0.75rem;
+}
+
+.tsd-panel-group > .tsd-accordion-summary h2 {
+  font-size: 1.125rem;
+}
+
+.tsd-member .tsd-anchor + h3 {
+  font-family: var(--font-heading);
+}
+
+.tsd-member {
+  margin-bottom: 1.5rem;
+}
+
+.tsd-index-panel .tsd-accordion-summary h3,
+.tsd-index-summary h3,
+.tsd-index-heading {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--color-text);
+  font-family: var(--font-ui);
+}
+
+.tsd-index-panel .tsd-index-list a,
+a.tsd-index-link {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 400;
+}
+
+.tsd-tag,
+.tsd-flag {
+  font-family: var(--font-ui);
+  border-radius: 999px;
+  padding: 0.05rem 0.55rem;
+  color: var(--color-comment-tag-text);
+  background: var(--color-comment-tag);
+}
+
+.tsd-sources a {
+  text-decoration: none;
+  color: var(--anza-nav);
+}
+
+.tsd-sources a:hover {
+  color: var(--anza-accent);
+}
+
+.tsd-comment-tags h4,
+.tsd-parameters-title,
+.tsd-returns-title {
+  font-family: var(--font-heading);
+}
+
+.tsd-alert {
+  border-radius: var(--radius-lg);
+}
+
+footer {
+  font-family: var(--font-ui);
+  font-size: 13px;
+  color: var(--anza-nav);
+  border-top-color: color-mix(in srgb, var(--color-text) 10%, transparent);
+}
+
+footer a {
+  color: var(--anza-accent);
+}
+
+/* ─── Landing (the README hero, like the Anza entry page) ────────────── */
+
+.col-content:has(> .tsd-panel > h1[align='center']) > .tsd-page-title {
+  display: none;
+}
+
+.tsd-typography > p[align='center'] {
+  text-align: center;
+  max-width: 640px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.tsd-typography > p[align='center']:first-child {
+  margin-top: 2.5rem;
+}
+
+.tsd-typography > h1[align='center'] {
+  text-align: center;
+  font-size: clamp(2.5rem, 6vw, 4rem);
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  line-height: 1.05;
+  margin: 0.5rem 0 1rem;
+  background: linear-gradient(135deg, var(--color-text) 0%, var(--anza-accent) 130%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.tsd-typography > h1[align='center'] + p[align='center'] {
+  font-size: 1.15rem;
+  color: var(--color-text-aside);
+}
+
+.tsd-typography > p[align='center']:has(> a) {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+  font-size: 0;
+  margin-top: 1.75rem;
+  margin-bottom: 2.5rem;
+}
+
+.tsd-typography > p[align='center'] > a {
+  font-family: var(--font-ui);
+  font-size: 14.5px;
+  font-weight: 600;
+  padding: 0.6rem 1.25rem;
+  border-radius: var(--radius-xl);
+  color: var(--color-text);
+  background: color-mix(in srgb, var(--color-text) 6%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-text) 14%, transparent);
+  transition: background 140ms ease, border-color 140ms ease, color 140ms ease;
+}
+
+.tsd-typography > p[align='center'] > a:first-child {
+  color: var(--anza-accent);
+  background: color-mix(in srgb, var(--anza-accent) 8%, transparent);
+  border-color: color-mix(in srgb, var(--anza-accent) 55%, transparent);
+}
+
+.tsd-typography > p[align='center'] > a:hover {
+  text-decoration: none;
+  border-color: var(--anza-accent);
+  color: var(--anza-accent);
+}
+
+.tsd-typography > p[align='center'] > a.external {
+  background-image: none;
+  padding-right: 1.25rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+  }
+}

@@ -1,8 +1,7 @@
 node_modules/
 dist/
-# Docs build (docs/build.sh) and the anza checkout it reads the theme from
+# Docs build (npm run docs)
 _site/
-.anza
 *.db
 *.db-wal
 *.db-shm
