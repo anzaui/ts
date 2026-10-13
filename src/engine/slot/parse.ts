@@ -1,13 +1,65 @@
 import { AnzaError } from '../../errors/index.js';
 
+/**
+ * One piece of a parsed template.
+ *
+ * - `{ type: 'static', value }`: HTML text, written as is.
+ * - `{ type: 'slot', name }`: a `{{name}}` placeholder (name trimmed, so
+ *   `{{ user_name }}` is `user_name`); HTML-escaped when the engine runs with
+ *   `escape: true`.
+ * - `{ type: 'raw', name }`: a `{{{name}}}` placeholder, always inserted as is.
+ *
+ * @category Rendering
+ */
 export type Chunk =
-  | { type: 'static'; value: string }
+  | {
+      /** Static text. */
+      type: 'static';
+      /** The HTML text, written as is. */
+      value: string;
+    }
   /** `{{name}}`: HTML-escaped when the engine runs with `escape: true`. */
-  | { type: 'slot'; name: string }
+  | {
+      /** A `{{name}}` placeholder. */
+      type: 'slot';
+      /** The trimmed placeholder name. */
+      name: string;
+    }
   /** `{{{name}}}`: always inserted as-is. */
-  | { type: 'raw'; name: string };
+  | {
+      /** A `{{{name}}}` placeholder. */
+      type: 'raw';
+      /** The trimmed placeholder name. */
+      name: string;
+    };
 
-/** Split a template into static text and `{{slot}}` / `{{{raw}}}` chunks. */
+/**
+ * Split a template into static text and `{{slot}}` / `{{{raw}}}` chunks,
+ * scanning the string once.
+ *
+ * @remarks
+ * Placeholders are the whole syntax: there are no loops, conditionals,
+ * filters, includes or comments.
+ *
+ * @param template - The template source.
+ * @returns The chunks in order.
+ * @throws {@link AnzaError} `TEMPLATE` for an unclosed `{{` or `{{{`, or an empty `{{}}`.
+ *
+ * @example
+ * ```ts
+ * import { extract } from '@anzaui/engine';
+ *
+ * extract('<b>{{title}}</b>{{{body}}}');
+ * // [
+ * //   { type: 'static', value: '<b>' },
+ * //   { type: 'slot', name: 'title' },
+ * //   { type: 'static', value: '</b>' },
+ * //   { type: 'raw', name: 'body' },
+ * // ]
+ * ```
+ *
+ * @category Rendering
+ */
 export function extract(template: string): Chunk[] {
   const chunks: Chunk[] = [];
   let cursor = 0;

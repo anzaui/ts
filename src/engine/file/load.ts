@@ -4,10 +4,16 @@ import { digest } from '../../crypto/index.js';
 import { AnzaError } from '../../errors/index.js';
 import { extract, compile, type Chunk, type Params, type CompiledRenderer } from '../slot/index.js';
 
-/** Default cap on a template file's size: 1 MiB. */
+/**
+ * Default cap on a template file's size: 1 MiB.
+ * @category Engine
+ */
 export const DEFAULT_MAX_TEMPLATE_BYTES = 1024 * 1024;
 
-/** How templates are loaded (from `Setup`). */
+/**
+ * How templates are loaded (set from {@link SetupOptions}).
+ * @category Engine
+ */
 export interface LoadOptions {
   /** HTML-escape `{{slot}}` values; `{{{raw}}}` stays raw. */
   escape?: boolean;
@@ -15,24 +21,61 @@ export interface LoadOptions {
   maxBytes?: number;
 }
 
+/**
+ * One parsed template: its source, digest, chunks and compiled render
+ * function. Get one with {@link Engine.get} or {@link one}.
+ *
+ * @example
+ * ```ts
+ * const tpl = engine.get('feed/card.html');
+ * tpl.digest;                          // hex SHA-256 of the file
+ * tpl.bind({ title: 'Live Update' });  // '<ui-card>Live Update</ui-card>'
+ * ```
+ *
+ * @category Engine
+ */
 export class Template {
+  /** The compiled render function (see {@link compile}). */
   public renderer: CompiledRenderer;
 
+  /**
+   * @param name - Path relative to the root with `/` separators.
+   * @param path - The path the file was read from.
+   * @param raw - The file contents.
+   * @param digest - Lowercase hex SHA-256 of the contents.
+   * @param chunks - The parsed chunks (see {@link extract}).
+   * @param options - Escaping mode.
+   */
   constructor(
+    /** Path relative to the root, e.g. `pages/home.html`. */
     public name: string,
+    /** The path the file was read from (`root` joined with `name`). */
     public path: string,
+    /** The file contents. */
     public raw: string,
+    /** Lowercase hex SHA-256 of the contents. */
     public digest: string,
+    /** The parsed chunks. */
     public chunks: Chunk[],
     options: LoadOptions = {}
   ) {
     this.renderer = compile(chunks, { escape: options.escape });
   }
 
+  /**
+   * Render the template with `params`.
+   * @param params - Values for the placeholders.
+   * @returns The bound HTML.
+   */
   bind(params?: Params): string {
     return this.renderer(params);
   }
 
+  /**
+   * Same as {@link Template.bind}.
+   * @param params - Values for the placeholders.
+   * @returns The bound HTML.
+   */
   render(params?: Params): string {
     return this.renderer(params);
   }
@@ -47,6 +90,15 @@ function inside(root: string, target: string): boolean {
  * Load one template. Errors name the template, never the full path: a file
  * that resolves (through a symlink) outside `rootDir`, or that is larger than
  * `maxBytes`, is refused.
+ *
+ * @param rootDir - The template root.
+ * @param relPath - Path of the file relative to `rootDir`.
+ * @param options - Escaping mode and size limit.
+ * @returns The parsed template.
+ * @throws {@link AnzaError} `NOT_FOUND` when the file cannot be read or lies
+ *   outside the root; `TEMPLATE` when it is too large or does not parse.
+ *
+ * @category Engine
  */
 export async function one(rootDir: string, relPath: string, options: LoadOptions = {}): Promise<Template> {
   const name = relPath.split(path.sep).join('/').replace(/^\/+/, '');
@@ -87,6 +139,15 @@ export async function one(rootDir: string, relPath: string, options: LoadOptions
 /**
  * Load every `.html` file under `rootDir`. Symlinked directories are not
  * followed, and symlinked files that resolve outside `rootDir` are skipped.
+ * A missing root gives an empty map.
+ *
+ * @param rootDir - The template root.
+ * @param options - Escaping mode and size limit.
+ * @returns Template name to parsed template.
+ * @throws {@link AnzaError} `TEMPLATE` or `NOT_FOUND` from {@link one} for
+ *   the first file that fails.
+ *
+ * @category Engine
  */
 export async function all(rootDir: string, options: LoadOptions = {}): Promise<Map<string, Template>> {
   const map = new Map<string, Template>();

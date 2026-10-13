@@ -1,6 +1,18 @@
 import type { Chunk } from './parse.js';
 import { escapeHtml } from './escape.js';
 
+/**
+ * Values for a template's placeholders: a plain object, a `Map`, or
+ * `[key, value]` pairs (the first pair for a key wins).
+ *
+ * @remarks
+ * Objects are read through own properties only (`Object.hasOwn`), so
+ * `{{toString}}`, `{{constructor}}` and `{{__proto__}}` render nothing unless
+ * you pass them. Values are converted with {@link stringify}; a missing,
+ * `null` or `undefined` value renders nothing.
+ *
+ * @category Rendering
+ */
 export type Params =
   | Record<string, any>
   | Map<string, any>
@@ -8,8 +20,16 @@ export type Params =
   | null
   | undefined;
 
+/**
+ * A compiled template: binds `params` and returns the HTML.
+ * @category Rendering
+ */
 export type CompiledRenderer = (params?: Params) => string;
 
+/**
+ * Options for {@link compile}.
+ * @category Rendering
+ */
 export interface CompileOptions {
   /** HTML-escape `{{slot}}` values; `{{{raw}}}` stays raw. Default `false`. */
   escape?: boolean;
@@ -18,10 +38,24 @@ export interface CompileOptions {
 const hasOwn = Object.hasOwn;
 
 /**
- * A value as slot text (see `docs/engines/contract.md`): strings as-is,
- * `true`/`false`, numbers via `String()` (integral floats have no `.0`),
- * `null`/`undefined` as nothing, plain objects and arrays as compact JSON,
- * anything else via `String()`.
+ * A value as slot text, the same in all engines (see the
+ * [Engine Contract](https://github.com/anzaui/anza/blob/main/docs/engines/contract.md)):
+ * strings as-is, `true`/`false`, numbers via `String()` (integral floats have
+ * no `.0`), `null`/`undefined` as nothing, plain objects and arrays as compact
+ * JSON, anything else via `String()`.
+ *
+ * @param val - The value to convert.
+ * @returns The text, or `undefined` for `null` / `undefined`.
+ *
+ * @example
+ * ```ts
+ * stringify(3.0);        // '3'
+ * stringify(true);       // 'true'
+ * stringify({ a: 1 });   // '{"a":1}'
+ * stringify(null);       // undefined
+ * ```
+ *
+ * @category Rendering
  */
 export function stringify(val: unknown): string | undefined {
   if (val === undefined || val === null) return undefined;
@@ -37,6 +71,26 @@ export function stringify(val: unknown): string | undefined {
  * Compile chunks into a renderer. The template is flattened once into
  * `statics[0] slot[0] statics[1] … slot[n-1] statics[n]`; a render does one
  * type check on `params`, then one lookup per slot.
+ *
+ * @remarks
+ * Values are inserted **without HTML escaping** unless `options.escape` is
+ * `true`; then `{{name}}` values go through {@link escapeHtml} and
+ * `{{{name}}}` values stay raw. `extract` and `compile` are plain JavaScript,
+ * so they also work on runtimes without a filesystem.
+ *
+ * @param chunks - Chunks from {@link extract}.
+ * @param options - Escaping mode.
+ * @returns A function that binds params and returns the HTML.
+ *
+ * @example
+ * ```ts
+ * import { compile, extract } from '@anzaui/engine';
+ *
+ * const render = compile(extract('<ui-card>{{title}}</ui-card>'), { escape: true });
+ * render({ title: 'Tom & Jerry' }); // '<ui-card>Tom &amp; Jerry</ui-card>'
+ * ```
+ *
+ * @category Rendering
  */
 export function compile(chunks: Chunk[], options: CompileOptions = {}): CompiledRenderer {
   const escape = Boolean(options.escape);
@@ -94,6 +148,16 @@ export function compile(chunks: Chunk[], options: CompileOptions = {}): Compiled
   };
 }
 
+/**
+ * Compile `chunks` and render them once with `params`.
+ *
+ * @param chunks - Chunks from {@link extract}.
+ * @param params - Values for the placeholders.
+ * @param options - Escaping mode.
+ * @returns The bound HTML.
+ *
+ * @category Rendering
+ */
 export function string(chunks: Chunk[], params?: Params, options: CompileOptions = {}): string {
   return compile(chunks, options)(params);
 }
