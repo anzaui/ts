@@ -1,31 +1,58 @@
 import * as fs from 'node:fs';
 import { AnzaError } from '../../errors/index.js';
-import { all } from '../../engine/file/load.js';
+import { all, DEFAULT_MAX_TEMPLATE_BYTES, type LoadOptions } from '../../engine/file/load.js';
 import { listen, type FileWatcher } from '../../engine/file/watch.js';
 import { CacheStore } from '../../engine/cache/store.js';
-import { Engine, type SignOptions } from '../../engine/cache/engine.js';
+import { Engine } from '../../engine/cache/engine.js';
+import { Signer, redact, type SignOptions } from '../../crypto/signer.js';
 
 export interface SetupOptions {
   root: string;
   signing?: SignOptions;
+  /** Reload templates when files under `root` change (debounced). */
   watch?: boolean;
+  /** Fragment allowlist, see `EngineOptions.fragments`. */
+  fragments?: string[];
+  /**
+   * HTML-escape `{{slot}}` values; `{{{slot}}}` stays raw. Off by default
+   * (values are inserted as-is), see `docs/engines/contract.md`.
+   */
+  escape?: boolean;
+  /** Refuse template files larger than this (default 1 MiB). */
+  maxTemplateBytes?: number;
 }
 
 export class Setup {
   public root: string;
   public signing: SignOptions;
   public watch: boolean;
+  public fragments: string[];
+  public escape: boolean;
+  public maxTemplateBytes: number;
 
   constructor(options: SetupOptions | string) {
-    if (typeof options === 'string') {
-      this.root = options;
-      this.signing = { mode: 'none' };
-      this.watch = false;
-    } else {
-      this.root = options.root;
-      this.signing = options.signing || { mode: 'none' };
-      this.watch = Boolean(options.watch);
-    }
+    const o: SetupOptions = typeof options === 'string' ? { root: options } : options;
+    this.root = o.root;
+    this.signing = o.signing || { mode: 'none' };
+    this.watch = Boolean(o.watch);
+    this.fragments = [...(o.fragments ?? [])];
+    this.escape = Boolean(o.escape);
+    this.maxTemplateBytes = o.maxTemplateBytes ?? DEFAULT_MAX_TEMPLATE_BYTES;
+  }
+
+  toJSON(): Record<string, unknown> {
+    return {
+      root: this.root,
+      signing: redact(this.signing),
+      watch: this.watch,
+      fragments: this.fragments,
+      escape: this.escape,
+      maxTemplateBytes: this.maxTemplateBytes,
+    };
+  }
+
+  [Symbol.for('nodejs.util.inspect.custom')](): string {
+    return `Setup ${JSON.stringify(this.toJSON())}`;
   }
 
   validate(): void {
@@ -34,23 +61,26 @@ export class Setup {
     }
   }
 
+  /** Validate the root and the signing keys, load every template, and start the watcher when `watch` is set. */
   async run(): Promise<Engine> {
     this.validate();
-    const templates = await all(this.root);
-    const cache = new CacheStore(templates);
+    const signer = Signer.from(this.signing);
+    const load: LoadOptions = { escape: this.escape, maxBytes: this.maxTemplateBytes };
+    const cache = new CacheStore(await all(this.root, load));
 
     let watcher: FileWatcher | undefined;
     if (this.watch) {
-      watcher = listen(this.root, async (_event, filename) => {
+      // Debounced and serialized by the watcher: the newest tree always wins.
+      watcher = listen(this.root, async () => {
         try {
-          const fresh = await all(this.root);
-          cache.templates = fresh;
+          cache.templates = await all(this.root, load);
         } catch {
-          // ignore transient read errors during editor file write
+          // A half-written or oversized file: keep the last good tree; the
+          // next event reloads it.
         }
       });
     }
 
-    return new Engine(this.root, cache, this.signing, watcher);
+    return new Engine(this.root, cache, signer, watcher, { fragments: this.fragments });
   }
 }
