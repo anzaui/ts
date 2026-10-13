@@ -1,139 +1,101 @@
 <p align="center">
-  <img src="logo.svg" width="64" height="64" alt="Anza Logo" />
+  <img src="logo.svg" width="64" height="64" alt="Anza logo" />
 </p>
 
-<h1 align="center">Anza (TypeScript Engine)</h1>
+<h1 align="center">@anzaui/engine</h1>
 
-A zero-dependency template and dynamic fragment rendering library for Node.js, Bun, Deno, and Edge runtimes.
+<p align="center">
+  Server-templated UI for Node.js, Bun and Deno: full HTML pages for the first
+  load, signed JSON envelopes for every update after it.
+</p>
 
-## What It Does
+<p align="center">
+  <a href="https://anzaui.github.io/ts/modules.html">Guide &amp; API</a> ·
+  <a href="https://www.npmjs.com/package/@anzaui/engine">npm</a> ·
+  <a href="https://github.com/anzaui/ts">GitHub</a> ·
+  <a href="https://github.com/anzaui/anza/blob/main/docs/engines/contract.md">Engine Contract</a>
+</p>
 
-1. **Full-Page Rendering**: Renders complete HTML pages with `<template shadowrootmode="open">` Declarative Shadow DOM templates.
-2. **Dynamic Fragment Envelopes**: Generates signed JSON `Envelope` payloads to update specific client UI slots.
-3. **Cryptographic Signing**: Signs envelopes with HMAC-SHA256 or Ed25519 (`node:crypto`) and verifies received ones with `verifyEnvelope`.
-4. **Streaming**: Helpers for Server-Sent Events (SSE) and WebSocket message formats.
-5. **No External Dependencies**: Built on Node.js built-ins (`node:fs`, `node:crypto`) and the standard `Response` class.
+## What it does
 
-## Installation
+1. **Full pages**: renders complete HTML documents (with open Declarative
+   Shadow DOM where your templates use it) for the first load and SEO.
+2. **Fragment envelopes**: renders `{ v: 2, slot, ts, html, sig? }` JSON to
+   update one part of the page, over `fetch`, Server-Sent Events or WebSockets.
+3. **Signing**: signs envelopes with HMAC-SHA256 or Ed25519 (`node:crypto`)
+   over a length-prefixed v2 message, and checks received ones with
+   `verifyEnvelope`.
+4. **Parse once**: `{{name}}` / `{{{name}}}` templates are parsed at startup
+   into render functions; request input never reaches the filesystem.
+5. **No dependencies**: built on Node.js built-ins and the standard `Response`.
+
+The behaviour is shared with the Rust and Python engines and specified in the
+[Engine Contract](https://github.com/anzaui/anza/blob/main/docs/engines/contract.md).
+
+## Install
 
 ```bash
 npm install @anzaui/engine
 ```
 
-## Usage
-
-### 1. Initialize Engine
+## Quick start
 
 ```typescript
-import { Setup } from '@anzaui/engine';
+import { Setup, Page, Fragment, htmlResponse, jsonResponse, verifyEnvelope } from '@anzaui/engine';
 
+// Load and parse ./templates once; a short or missing key throws CRYPTO here.
 const engine = await new Setup({
   root: './templates',
-  signing: {
-    mode: 'hmac',
-    secret: process.env.ANZA_SECRET!, // at least 32 bytes
-  },
+  signing: { mode: 'hmac', secret: process.env.ANZA_SECRET! }, // at least 32 bytes
 }).run();
+
+export default {
+  async fetch(req: Request): Promise<Response> {
+    const url = new URL(req.url);
+    if (url.pathname === '/api/card') {
+      // {"v":2,"slot":"feed","ts":1724771234,"html":"…","sig":"…"}
+      return jsonResponse(await new Fragment('feed/card.html', 'feed', { title: 'Card' }).run(engine));
+    }
+    // pages/home.html inside layout/shell.html
+    return htmlResponse(await new Page(url.pathname, { title: 'Home' }).run(engine));
+  },
+};
 ```
 
-`Setup.run()` checks the key once. An HMAC secret shorter than 32 bytes, or an
-Ed25519 `privateKey` that is not a 32-byte seed, 64-char lowercase hex seed,
-PEM or `KeyObject`, throws an `AnzaError` with code `CRYPTO`. The engine never
-falls back to unsigned envelopes.
-
-### 2. Render Full Pages
+Whoever relays an envelope can check it; `verifyEnvelope` throws an
+`AnzaError` with code `CRYPTO` naming the failed check:
 
 ```typescript
-import { Page } from '@anzaui/engine';
-
-const doc = await new Page('/', { title: 'Dashboard' }).run(engine);
-console.log(doc.html);
-```
-
-### 3. Render Signed JSON Fragments
-
-```typescript
-import { Fragment } from '@anzaui/engine';
-
-const envelope = await new Fragment('card.html', 'feed', {
-  title: 'New Post',
-  content: 'Article content here',
-}).run(engine);
-
-// {"v":2,"slot":"feed","ts":1724771234,"html":"…","sig":"…"}
-console.log(JSON.stringify(envelope));
-```
-
-### 4. Verify a Received Envelope
-
-```typescript
-import { verifyEnvelope } from '@anzaui/engine';
-
-// Throws an AnzaError (code CRYPTO) naming the failed check.
-verifyEnvelope({ mode: 'hmac', secret: process.env.ANZA_SECRET! }, received, {
+verifyEnvelope({ mode: 'hmac', secret: process.env.ANZA_SECRET! }, JSON.parse(body), {
   maxAgeSecs: 60,
   slot: 'feed',
 });
 ```
 
-### 5. HTTP Server Example (Web Standard fetch / Bun / Deno)
-
-```typescript
-import { Setup, Page, Fragment, htmlResponse, jsonResponse } from '@anzaui/engine';
-
-const engine = await new Setup({
-  root: './templates',
-  signing: { mode: 'hmac', secret: process.env.ANZA_SECRET! },
-}).run();
-
-export default {
-  port: 3000,
-  async fetch(req: Request): Promise<Response> {
-    const url = new URL(req.url);
-
-    if (url.pathname === '/') {
-      const doc = await new Page('/', { title: 'Home' }).run(engine);
-      return htmlResponse(doc);
-    }
-
-    if (url.pathname === '/api/card') {
-      const env = await new Fragment('card.html', 'feed', { title: 'Card' }).run(engine);
-      return jsonResponse(env);
-    }
-
-    return new Response('Not Found', { status: 404 });
-  },
-};
-```
-
-## Templates
-
-Templates use `{{name}}` (value) and `{{{name}}}` (raw) placeholders and are
-parsed once at startup. By default both insert values as-is, so escape user
-input with `escapeHtml` first. With `escape: true` in `Setup`, `{{name}}` is
-HTML-escaped and `{{{name}}}` stays raw. Unknown page routes reject with
-`NOT_FOUND`. Template layout,
-rendering rules and signing are in the [documentation](https://anzaui.github.io/ts/).
+Values are **not HTML-escaped by default**: escape user input with
+`escapeHtml`, or pass `escape: true` to `Setup` so `{{name}}` is escaped and
+only `{{{name}}}` is raw. Unknown routes reject with an `AnzaError` of code
+`NOT_FOUND`.
 
 ## Documentation
 
-- Guide and API reference: https://anzaui.github.io/ts/
-- [Engine Contract](https://github.com/anzaui/anza/blob/main/docs/engines/contract.md): the behaviour shared by
-  the Rust, TypeScript and Python engines (envelope format, signature v2, page
-  resolution, escaping, error codes). `tests/fixtures/` holds vendored copies
-  of its golden fixtures.
-- [Changelog](CHANGELOG.md)
+The guide and API reference are at **https://anzaui.github.io/ts/**. They are
+generated from the TSDoc comments in `src/` with [TypeDoc](https://typedoc.org)
+(`typedoc.json`, Anza theme in `docs/theme/`) and deployed to GitHub Pages by
+`.github/workflows/docs.yml`. Warnings fail the build, so every public export
+must be documented and every `{@link}` must resolve.
 
-The docs are markdown in `docs/` (pages and sidebar in `docs/config.toml`),
-built with `anza docs` and deployed to GitHub Pages by
-`.github/workflows/docs.yml`. To build them locally you need the
-[Anza CLI](https://github.com/anzaui/anza/releases) and the anza repo's theme
-in `.anza/`:
+To build and check them locally:
 
 ```bash
-git clone --depth 1 --branch v0.6.0 https://github.com/anzaui/anza .anza
-ANZA=/path/to/anza docs/build.sh     # writes _site/, served under /ts/
+npm ci
+npm run docs                     # writes _site/
+# optional browser check (needs Chrome and puppeteer-core):
+PUPPETEER_CORE=/path/to/puppeteer-core/lib/esm/puppeteer/puppeteer-core.js \
+  node docs/check.mjs _site /ts   # serves _site under /ts/ like GitHub Pages
 ```
+
+See also the [changelog](https://github.com/anzaui/ts/blob/main/CHANGELOG.md).
 
 ## Releasing
 
