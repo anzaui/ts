@@ -1,0 +1,195 @@
+# docs/config.toml — manifest for `anza docs` (the Anza docs generator).
+# Build the site with docs/build.sh; it needs the anza CLI and the anza repo's
+# web/src theme checked out in .anza/ (the docs workflow does both).
+
+[site]
+title = "TypeScript engine — Anza"
+base = "/ts"
+out = "_site.raw"
+
+[entry]
+home = "index.md"
+route = "/ts"
+landing = false
+root_dock = "docs"
+
+[files]
+roots = ["."]
+include = ["**/*.md"]
+exclude = []
+
+[assets]
+# Theme folders from the anza repo (checked out at a pinned tag into .anza/).
+styles = "../.anza/web/src/styles"
+tokens = "../.anza/web/src/tokens"
+view_code = "../.anza/web/src/views/code"
+docks = "../.anza/web/src/docks"
+
+[seo]
+site_name = "TypeScript engine — Anza"
+sitemap = false
+robots = false
+json_ld = false
+origin = "https://anzaui.github.io"
+
+[[sidebar.section]]
+id = "start"
+title = "Getting Started"
+
+[[sidebar.section.items]]
+path = "index.md"
+label = "Introduction"
+order = 0
+
+[[sidebar.section]]
+id = "architecture"
+title = "Architecture"
+
+[[sidebar.section.items]]
+path = "architecture/index.md"
+label = "Overview"
+order = 0
+
+[[sidebar.section.items]]
+path = "architecture/slots.md"
+label = "Slot Parsing & Render Functions"
+order = 1
+
+[[sidebar.section.items]]
+path = "architecture/cache.md"
+label = "Template Cache"
+order = 2
+
+[[sidebar.section]]
+id = "rendering"
+title = "Rendering Pipeline"
+
+[[sidebar.section.items]]
+path = "rendering/index.md"
+label = "Overview"
+order = 0
+
+[[sidebar.section.items]]
+path = "rendering/ssr.md"
+label = "Full-Page SSR & Open DSD"
+order = 1
+
+[[sidebar.section.items]]
+path = "rendering/fragments.md"
+label = "Fragment Envelopes"
+order = 2
+
+[[sidebar.section]]
+id = "crypto"
+title = "Cryptographic Verification"
+
+[[sidebar.section.items]]
+path = "crypto/index.md"
+label = "Overview"
+order = 0
+
+[[sidebar.section.items]]
+path = "crypto/ed25519.md"
+label = "Ed25519 Signing"
+order = 1
+
+[[sidebar.section.items]]
+path = "crypto/hmac.md"
+label = "HMAC-SHA256"
+order = 2
+
+[[sidebar.section.items]]
+path = "crypto/hkdf.md"
+label = "Key Derivation with HKDF"
+order = 3
+
+[[sidebar.section]]
+id = "streaming"
+title = "Real-Time Streaming"
+
+[[sidebar.section.items]]
+path = "streaming/index.md"
+label = "Overview"
+order = 0
+
+[[sidebar.section.items]]
+path = "streaming/sse.md"
+label = "Server-Sent Events (SSE)"
+order = 1
+
+[[sidebar.section.items]]
+path = "streaming/ws.md"
+label = "WebSocket Frames"
+order = 2
+
+[[sidebar.section]]
+id = "adapters"
+title = "Framework Adapters"
+
+[[sidebar.section.items]]
+path = "adapters/index.md"
+label = "Overview"
+order = 0
+
+[[sidebar.section.items]]
+path = "adapters/web.md"
+label = "Web Standard Response"
+order = 1
+
+[[sidebar.section.items]]
+path = "adapters/hono.md"
+label = "Hono Integration"
+order = 2
+
+[[sidebar.section.items]]
+path = "adapters/express.md"
+label = "Express Integration"
+order = 3
+
+[[sidebar.section.items]]
+path = "adapters/fastify.md"
+label = "Fastify Integration"
+order = 4
+
+[[sidebar.section]]
+id = "runtimes"
+title = "Runtime Support"
+
+[[sidebar.section.items]]
+path = "runtimes/index.md"
+label = "Overview"
+order = 0
+
+[[sidebar.section.items]]
+path = "runtimes/node.md"
+label = "Node.js"
+order = 1
+
+[[sidebar.section.items]]
+path = "runtimes/bun.md"
+label = "Bun & Deno"
+order = 2
+
+[[sidebar.section.items]]
+path = "runtimes/edge.md"
+label = "Edge Runtimes"
+order = 3
+
+[[sidebar.section]]
+id = "performance"
+title = "Performance"
+
+[[sidebar.section.items]]
+path = "performance/index.md"
+label = "Overview"
+order = 0
+
+[[sidebar.section.items]]
+path = "performance/benchmarks.md"
+label = "Benchmarks"
+order = 1
+
+[[sidebar.section.items]]
+path = "performance/memory.md"
+label = "Memory Layout"
+order = 2
